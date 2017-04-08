@@ -59,10 +59,11 @@ public class FolderManager {
         let fm = FileManager.default
         do {
             let paths = try fm.contentsOfDirectory(atPath: currentURL.path)
-            let b: UnsafeMutablePointer<ObjCBool>? = nil
+            var isDir: ObjCBool = false
             for path in paths {
-                if fm.fileExists(atPath: path, isDirectory: b) {
-                    if b!.pointee.boolValue {
+                let fullPath = currentURL.appendingPathComponent(path).path
+                if fm.fileExists(atPath: fullPath, isDirectory: &isDir) {
+                    if isDir.boolValue {
                         dUrls.append(URL.init(fileURLWithPath: path))
                     } else {
                         fUrls.append(URL.init(fileURLWithPath: path))
@@ -78,20 +79,39 @@ public class FolderManager {
     ///
     /// - Parameter url: childUrl
     /// - Returns: result
-    public func goToChild(url: URL) -> Bool {
+    public func goToChild(url: URL) {
         currentURL = url
-        return true
     }
     
+    
+    /// Create new Directory at here
+    ///
+    /// - Parameter name: Dir Name
+    /// - Returns: Full URL
     public func createDirectory(name: String) -> URL? {
         let url = currentURL.appendingPathComponent(name)
         do {
             try FileManager.default.createDirectory(at: url, withIntermediateDirectories: false, attributes: nil)
-            
-        } catch {
+            return url
+        } catch let error {
+            print(error)
             return nil
         }
-        return url
+    }
+    
+    
+    /// Delete dir
+    ///
+    /// - Parameter name: dir name
+    /// - Returns: result
+    public func deleteDirectory(name: String) -> Bool {
+        do {
+            try FileManager.default.removeItem(at: currentURL.appendingPathComponent(name))
+            return true
+        } catch let error {
+            print(error)
+            return false
+        }
     }
     
 }
